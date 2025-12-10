@@ -74,7 +74,7 @@ func (h *UserHandler) Authenticate(c *gin.Context) {
 		Path:     "/",
 		Domain:   "", // set to your backend domain in production
 		MaxAge:   3600,
-		Secure:   false, // set true for production/HTTPS
+		Secure:   true, // set true for production/HTTPS
 		HttpOnly: true,
 		SameSite: http.SameSiteNoneMode, // Lax for local dev, None for cross-site in production
 	})
