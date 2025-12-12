@@ -12,6 +12,7 @@ type AssetService interface {
     // Updated Signatures
 	UpdateAsset(id uint, asset *models.Asset) (*models.Asset, error)
 	DeleteAsset(id uint) error
+	BulkCreateAssets(assets []models.Asset) error
 }
 
 type assetService struct {
@@ -42,3 +43,10 @@ func (s *assetService) UpdateAsset(id uint, asset *models.Asset) (*models.Asset,
 func (s *assetService) DeleteAsset(id uint) error {
 	return s.repo.Delete(id)
 }
+
+func (s *assetService) BulkCreateAssets(assets []models.Asset) error {
+	return s.repo.BulkCreate(assets)
+}
+
+
+

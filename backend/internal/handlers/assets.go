@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"encoding/json"
+	"io"
 	"net/http"
 	"strconv"
 	"strings"
@@ -143,4 +145,43 @@ func (h *AssetHandler) DeleteAsset(c *gin.Context) {
 	}
 
 	utils.SuccessResponse(c, http.StatusOK, "Asset deleted successfully", nil)
+}
+
+func (h *AssetHandler) BulkImportAssets(c *gin.Context) {
+	file, err := c.FormFile("file")
+	if err != nil {
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to get file", err)
+		return
+
+	}
+
+	f, err := file.Open()
+	if err != nil {
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to open file", err)
+
+		return
+	}
+
+	defer f.Close()
+
+	data, err := io.ReadAll(f)
+
+	if err != nil {
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to read file", err)
+		return
+	}
+
+	var assets []models.Asset
+	if err := json.Unmarshal(data, &assets); err != nil {
+		utils.ErrorResponse(c, http.StatusBadRequest, "Invalid file format", err)
+		return
+	}
+
+	if err := h.service.BulkCreateAssets(assets); err != nil {
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to import assets", err)
+		return
+	}
+
+	utils.SuccessResponse(c, http.StatusCreated, "Assets imported successfully", nil)
+
 }

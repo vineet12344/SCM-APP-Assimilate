@@ -12,6 +12,7 @@ type AssetRepository interface {
     // Updated Signatures
 	Update(id uint, asset *models.Asset) (*models.Asset, error)
 	Delete(id uint) error
+	BulkCreate(assets []models.Asset) error
 }
 
 type assetRepository struct {
@@ -55,4 +56,18 @@ func (r *assetRepository) Update(id uint, asset *models.Asset) (*models.Asset, e
 // Delete performs a soft delete (because model has DeletedAt)
 func (r *assetRepository) Delete(id uint) error {
 	return r.db.Delete(&models.Asset{}, id).Error
+}
+
+
+func (r *assetRepository) BulkCreate(assets []models.Asset) error {
+	tx := r.db.Begin()
+	if err := tx.Error; err != nil {
+		return err
+	}
+	
+	if err := tx.CreateInBatches(&assets, 100).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+	return tx.Commit().Error
 }

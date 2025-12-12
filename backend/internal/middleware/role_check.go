@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 func RoleCheckMiddleware(requiredRole string) gin.HandlerFunc {
@@ -13,16 +14,25 @@ func RoleCheckMiddleware(requiredRole string) gin.HandlerFunc {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 			return
 		}
-		userClaims, ok := claims.(map[string]interface{})
+
+		userClaims, ok := claims.(jwt.MapClaims)
 		if !ok {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 			return
 		}
-		role, ok := userClaims["role"].(string)
+
+		roleVal, ok := userClaims["role"]
+		if !ok {
+			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "Forbidden: insufficient role"})
+			return
+		}
+
+		role, ok := roleVal.(string)
 		if !ok || role != requiredRole {
 			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "Forbidden: insufficient role"})
 			return
 		}
+
 		c.Next()
 	}
 }

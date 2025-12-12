@@ -38,6 +38,7 @@ func SetupRoutes(router *gin.Engine, h *handlers.Handlers) {
 			assets.GET("/:id", h.Asset.GetAsset)
 			assets.PUT("/:id", h.Asset.UpdateAsset)
     		assets.DELETE("/:id", h.Asset.DeleteAsset)
+			assets.POST("/bulk-import", middleware.JWTAuthMiddleware(), middleware.RoleCheckMiddleware("admin"), h.Asset.BulkImportAssets)
 		}
 
 		// // Scan routes
