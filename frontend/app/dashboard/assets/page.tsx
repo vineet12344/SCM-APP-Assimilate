@@ -347,30 +347,6 @@ export default function AssetsPage() {
                                 )}
                               </div>
                             </div>
-
-                            {/* Additional Information */}
-                            <div className="space-y-4">
-                              <h4 className="text-lg font-semibold text-foreground border-b pb-2">Additional Information</h4>
-                              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                <div className="space-y-2">
-                                  <Label htmlFor="discovery_source" className="text-sm font-medium">Discovery Source *</Label>
-                                  <Select name="discovery_source" required>
-                                    <SelectTrigger className="w-full h-10"><SelectValue placeholder="Select Discovery Source" /></SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="manual">Manual</SelectItem>
-                                      <SelectItem value="bulk">Bulk</SelectItem>
-                                      <SelectItem value="aws">AWS</SelectItem>
-                                      <SelectItem value="azure">Azure</SelectItem>
-                                      <SelectItem value="cmdb">CMDB</SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                </div>
-                                <div className="space-y-2">
-                                  <Label htmlFor="external_ref_id" className="text-sm font-medium">External Ref ID</Label>
-                                  <Input id="external_ref_id" name="external_ref_id" placeholder="e.g., REF-12345" className="w-full h-10" />
-                                </div>
-                              </div>
-                            </div>
                         </div>
                         {/* Buttons at the bottom of the form */}
                         <div className="flex flex-col sm:flex-row justify-end gap-2 pt-4 mt-8 border-t">
