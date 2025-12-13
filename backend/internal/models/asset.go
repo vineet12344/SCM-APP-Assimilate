@@ -2,8 +2,6 @@ package models
 
 import (
 	"time"
-
-	"github.com/lib/pq" // Required for Postgres Arrays
 	"gorm.io/gorm"
 )
 
@@ -27,7 +25,7 @@ type Asset struct {
 
 	// 5. Tags (Replaces string-based tags) - Required by Task 1
 	// We use pq.StringArray because the DB column is 'text[]'
-	Tags pq.StringArray `json:"tags" gorm:"type:text[]"`
+	Tags []string `json:"tags" gorm:"type:text[]"`
 
 	// 6. Connection Info - Required by FR-INV-05
 	ConnectorType string `json:"connector_type"` // e.g. "ssh", "winrm"
