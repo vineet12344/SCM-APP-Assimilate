@@ -9,9 +9,12 @@ import Link from "next/link"
 import { Eye } from "lucide-react"
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu"
+import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
+
 
 // Replace Lucide icons with SVG logos for Linux and Windows
 const LinuxLogo = () => (
@@ -36,29 +39,29 @@ const WindowsLogo = () => (
 
 // ComplianceBar component for visual compliance score
 const ComplianceBar = ({ score, status }: { score?: number; status?: string }) => {
-	// show empty muted bar + dash when score not available or Pending
-	if (score === undefined || status === "Pending") {
-		return (
-			<div className="flex items-center gap-2">
-				<div className="w-24 h-3 border border-muted rounded bg-transparent" />
-				<span className="text-xs text-muted-foreground">—</span>
-			</div>
-		)
-	}
-	let barColor = "bg-green-500"
-	if (score < 60) barColor = "bg-red-500"
-	else if (score < 85) barColor = "bg-yellow-400"
-	return (
-		<div className="flex items-center gap-2">
-			<div className="w-24 h-3 bg-gray-200 rounded overflow-hidden">
-				<div
-					className={`h-3 ${barColor}`}
-					style={{ width: `${score}%` }}
-				/>
-			</div>
-			<span className="text-xs text-muted-foreground">{score}%</span>
-		</div>
-	)
+  // show empty muted bar + dash when score not available or Pending
+  if (score === undefined || status === "Pending") {
+    return (
+      <div className="flex items-center gap-2">
+        <div className="w-24 h-3 border border-muted rounded bg-transparent" />
+        <span className="text-xs text-muted-foreground">—</span>
+      </div>
+    )
+  }
+  let barColor = "bg-green-500"
+  if (score < 60) barColor = "bg-red-500"
+  else if (score < 85) barColor = "bg-yellow-400"
+  return (
+    <div className="flex items-center gap-2">
+      <div className="w-24 h-3 bg-gray-200 rounded overflow-hidden">
+        <div
+          className={`h-3 ${barColor}`}
+          style={{ width: `${score}%` }}
+        />
+      </div>
+      <span className="text-xs text-muted-foreground">{score}%</span>
+    </div>
+  )
 }
 
 export default function AssetsPage() {
@@ -72,10 +75,7 @@ export default function AssetsPage() {
   // generate 100 sample assets so there are 10 pages of 10 items each
   const assets = useMemo(() => {
     const list: any[] = []
-    const types = ["Database", "Web Server", "API Server", "Application"]
     const statuses = ["Healthy", "At Risk", "Pending"]
-    const locations = ["US-East-1", "US-West-2", "EU-Central-1", "AP-South-1"]
-    const owners = ["Alice", "Bob", "Carol", "Dave"]
     for (let i = 1; i <= 100; i++) {
       const id = `asset-${String(i).padStart(3, "0")}`
       const osType = i % 2 === 0 ? "Linux" : "Windows"
@@ -181,10 +181,55 @@ export default function AssetsPage() {
     [pagedData]
   )
 
-  // State for connector type in the Add Asset form
   const [connectorType, setConnectorType] = useState<string>("ssh")
-  // State for SSH auth type in the Add Asset form
   const [sshAuthType, setSshAuthType] = useState<string>("password")
+  const LABEL_OPTIONS = [
+    "Web",
+    "Production",
+    "Database",
+    "Internal",
+    "External",
+    "Critical",
+    "Test",
+    "API",
+    "Cloud",
+    "Legacy"
+  ];
+  const [labels, setLabels] = useState<string[]>([]);
+  // Keep select values in state so we can read them on submit
+  const [osFamily, setOsFamily] = useState<string>("")
+  const [envValue, setEnvValue] = useState<string>("")
+
+  const handleSubmit = (e: any) => {
+    e.preventDefault()
+    const form = e.currentTarget as HTMLFormElement
+    const fd = new FormData(form)
+
+    const payload: Record<string, any> = {
+      hostname: fd.get('hostname') || '',
+      ip_address: fd.get('ip_address') || '',
+      os_family: osFamily || fd.get('os_family') || '',
+      os_version: fd.get('os_version') || '',
+      domain: fd.get('domain') || '',
+      environment: envValue || fd.get('environment') || '',
+      owner: fd.get('owner') || '',
+      labels: labels,
+      connector_type: connectorType || fd.get('connector_type') || '',
+      // SSH fields
+      ssh_username: fd.get('ssh_username') || '',
+      ssh_auth_type: sshAuthType || fd.get('ssh_auth_type') || '',
+      ssh_password: fd.get('ssh_password') || '',
+      ssh_private_key: fd.get('ssh_private_key') || '',
+      ssh_passphrase: fd.get('ssh_passphrase') || '',
+      ssh_port: fd.get('ssh_port') || '',
+      // Windows/OpenSSH fields
+      win_username: fd.get('win_username') || '',
+      win_password: fd.get('win_password') || '',
+      win_port: fd.get('win_port') || '',
+    }
+
+    console.log('Add Asset form submission', payload)
+  }
 
   return (
     <DashboardLayout title="Assets">
@@ -256,7 +301,7 @@ export default function AssetsPage() {
                   </Button>
                 </DialogClose>
               </DialogHeader>
-              <div className="px-6 pb-4 flex-1 flex flex-col justify-start">
+              <div className="px-6 pb-4 flex-1 flex flex-col justify-start overflow-y-hidden">
                 {/* ...existing code for Tabs... */}
                 <Tabs defaultValue="manual" className="w-full">
                   {/* ...existing code for TabsList, TabsContent... */}
@@ -269,47 +314,47 @@ export default function AssetsPage() {
                   <div className="relative" style={{ height: "480px" }}>
                     <div className="absolute inset-0 overflow-y-auto">
                       {/* ...existing code for TabsContent... */}
-                    <TabsContent value="bulk" className="">
-                      <div className="space-y-4">
-                        <p className="text-sm text-muted-foreground">Import assets from a CSV or JSON file.</p>
-                        <Input type="file" accept=".csv,.json" className="w-full" />
-                        <div className="flex flex-col sm:flex-row justify-end gap-2 pt-4">
-                          <DialogClose asChild>
-                            <Button variant="outline" type="button">Cancel</Button>
-                          </DialogClose>
-                          <Button type="button">Import</Button>
+                      <TabsContent value="bulk" className="">
+                        <div className="space-y-4">
+                          <p className="text-sm text-muted-foreground">Import assets from a CSV or JSON file.</p>
+                          <Input type="file" accept=".csv,.json" className="w-full" />
+                          <div className="flex flex-col sm:flex-row justify-end gap-2 pt-4">
+                            <DialogClose asChild>
+                              <Button variant="outline" type="button">Cancel</Button>
+                            </DialogClose>
+                            <Button type="button">Import</Button>
+                          </div>
                         </div>
-                      </div>
-                    </TabsContent>
-                    <TabsContent value="cmdb" className="">
-                      <div className="space-y-4">
-                        <p className="text-sm text-muted-foreground">Sync assets from ServiceNow CMDB.</p>
-                        <Button type="button" className="w-full sm:w-auto">Sync with ServiceNow</Button>
-                        <div className="flex flex-col sm:flex-row justify-end gap-2 pt-4">
-                          <DialogClose asChild>
-                            <Button variant="outline" type="button">Cancel</Button>
-                          </DialogClose>
+                      </TabsContent>
+                      <TabsContent value="cmdb" className="">
+                        <div className="space-y-4">
+                          <p className="text-sm text-muted-foreground">Sync assets from ServiceNow CMDB.</p>
+                          <Button type="button" className="w-full sm:w-auto">Sync with ServiceNow</Button>
+                          <div className="flex flex-col sm:flex-row justify-end gap-2 pt-4">
+                            <DialogClose asChild>
+                              <Button variant="outline" type="button">Cancel</Button>
+                            </DialogClose>
+                          </div>
                         </div>
-                      </div>
-                    </TabsContent>
-                    <TabsContent value="cloud" className="">
-                      <div className="space-y-4">
-                        <p className="text-sm text-muted-foreground">Sync assets from cloud providers (AWS/Azure).</p>
-                        <div className="flex gap-2 flex-col sm:flex-row">
-                          <Button type="button" className="w-full sm:w-auto">Sync from AWS</Button>
-                          <Button type="button" className="w-full sm:w-auto">Sync from Azure</Button>
+                      </TabsContent>
+                      <TabsContent value="cloud" className="">
+                        <div className="space-y-4">
+                          <p className="text-sm text-muted-foreground">Sync assets from cloud providers (AWS/Azure).</p>
+                          <div className="flex gap-2 flex-col sm:flex-row">
+                            <Button type="button" className="w-full sm:w-auto">Sync from AWS</Button>
+                            <Button type="button" className="w-full sm:w-auto">Sync from Azure</Button>
+                          </div>
+                          <div className="flex flex-col sm:flex-row justify-end gap-2 pt-4">
+                            <DialogClose asChild>
+                              <Button variant="outline" type="button">Cancel</Button>
+                            </DialogClose>
+                          </div>
                         </div>
-                        <div className="flex flex-col sm:flex-row justify-end gap-2 pt-4">
-                          <DialogClose asChild>
-                            <Button variant="outline" type="button">Cancel</Button>
-                          </DialogClose>
-                        </div>
-                      </div>
-                    </TabsContent>
-                    <TabsContent value="manual" className="">
-                      {/* Dynamic Add Asset Form - hooks moved to top level */}
-                      <form className="w-full" onSubmit={e => { e.preventDefault(); /* handle submit here if needed */ }}>
-                        <div className="space-y-8 pr-2">
+                      </TabsContent>
+                      <TabsContent value="manual" className="">
+                        {/* Dynamic Add Asset Form - hooks moved to top level */}
+                        <form className="w-full" onSubmit={handleSubmit}>
+                          <div className="space-y-8 pr-2">
                             {/* Basic Information */}
                             <div className="space-y-4">
                               <h4 className="text-lg font-semibold text-foreground border-b pb-2">Basic Information</h4>
@@ -324,7 +369,7 @@ export default function AssetsPage() {
                                 </div>
                                 <div className="space-y-2">
                                   <Label htmlFor="os_family" className="text-sm font-medium">OS Family *</Label>
-                                  <Select name="os_family" required>
+                                  <Select name="os_family" required value={osFamily} onValueChange={v => setOsFamily(v)}>
                                     <SelectTrigger className="w-full h-10"><SelectValue placeholder="Select OS Family" /></SelectTrigger>
                                     <SelectContent>
                                       <SelectItem value="linux">Linux</SelectItem>
@@ -342,7 +387,7 @@ export default function AssetsPage() {
                                 </div>
                                 <div className="space-y-2">
                                   <Label htmlFor="environment" className="text-sm font-medium">Environment *</Label>
-                                  <Select name="environment" required>
+                                  <Select name="environment" required value={envValue} onValueChange={v => setEnvValue(v)}>
                                     <SelectTrigger className="w-full h-10"><SelectValue placeholder="Select Environment" /></SelectTrigger>
                                     <SelectContent>
                                       <SelectItem value="prod">Production</SelectItem>
@@ -358,9 +403,57 @@ export default function AssetsPage() {
                                   <Label htmlFor="owner" className="text-sm font-medium">Owner</Label>
                                   <Input id="owner" name="owner" placeholder="e.g., john.doe" className="w-full h-10" />
                                 </div>
+                              </div>
+                            </div>
+                            {/* Labels Section (formerly Tags) */}
+                            <div className="space-y-4">
+                              <h4 className="text-lfg font-semibold text-foreground border-b pb-2">Labels</h4>
+                              <div className="grid gap-4">
                                 <div className="space-y-2">
-                                  <Label htmlFor="tags" className="text-sm font-medium">Tags</Label>
-                                  <Input id="tags" name="tags" placeholder="e.g., web, production" className="w-full h-10" />
+                                  <Label className="text-sm font-medium">Labels</Label>
+                                  <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                      <Button variant="outline" className="w-full justify-between min-h-[40px]">
+                                        <span className="flex flex-wrap gap-1 items-center w-full text-left">
+                                          {labels.length > 0 ? labels.map(label => (
+                                            <span
+                                              key={label}
+                                              className="rounded px-2 py-0.5 text-xs font-medium mb-0.5 transition-colors"
+                                              style={{
+                                                background: '#e0e7ff',
+                                                color: '#3730a3',
+                                                border: '1px solid #a5b4fc',
+                                                cursor: 'default'
+                                              }}
+                                              onMouseEnter={e => {
+                                                e.currentTarget.style.background = '#c7d2fe'; // lighter indigo
+                                                e.currentTarget.style.color = '#312e81'; // bolder indigo
+                                              }}
+                                              onMouseLeave={e => {
+                                                e.currentTarget.style.background = '#e0e7ff';
+                                                e.currentTarget.style.color = '#3730a3';
+                                              }}
+                                            >
+                                              {label}
+                                            </span>
+                                          )) : <span className="text-muted-foreground">Select labels</span>}
+                                        </span>
+                                      </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent className="w-full min-w-[200px] max-h-60 overflow-y-auto">
+                                      {LABEL_OPTIONS.map(label => (
+                                        <DropdownMenuItem key={label} asChild>
+                                          <div className="flex items-center gap-2 cursor-pointer" onClick={e => {
+                                            e.preventDefault();
+                                            setLabels(sel => sel.includes(label) ? sel.filter(l => l !== label) : [...sel, label]);
+                                          }}>
+                                            <Checkbox checked={labels.includes(label)} />
+                                            <span>{label}</span>
+                                          </div>
+                                        </DropdownMenuItem>
+                                      ))}
+                                    </DropdownMenuContent>
+                                  </DropdownMenu>
                                 </div>
                               </div>
                             </div>
@@ -443,17 +536,17 @@ export default function AssetsPage() {
                                 )}
                               </div>
                             </div>
-                        </div>
-                        {/* Buttons at the bottom of the form */}
-                        <div className="flex flex-col sm:flex-row justify-end gap-2 pt-4 mt-8 border-t">
-                          <DialogClose asChild>
-                            <Button variant="outline" type="button">Cancel</Button>
-                          </DialogClose>
-                          <Button type="submit">Add Asset</Button>
-                        </div>
-                      </form>
-                    </TabsContent>
-                  </div>
+                          </div>
+                          {/* Buttons at the bottom of the form */}
+                          <div className="flex flex-col sm:flex-row justify-end gap-2 pt-4 mt-8 border-t">
+                            <DialogClose asChild>
+                              <Button variant="outline" type="button">Cancel</Button>
+                            </DialogClose>
+                            <Button type="submit">Add Asset</Button>
+                          </div>
+                        </form>
+                      </TabsContent> 
+                    </div>
                   </div>
                 </Tabs>
               </div>
@@ -470,20 +563,20 @@ export default function AssetsPage() {
       </div>
 
       <div className="overflow-x-auto">
-      <Table
-         columns={[
-           { label: "Asset", key: "asset" },
-           { label: "OS", key: "os" },
-           { label: "Environment", key: "environment" },
-           { label: "Connector", key: "connector" },
-           { label: "Last Scanned", key: "lastScanned" },
-           { label: "Compliance", key: "compliance" },
-           { label: "Exceptions", key: "exceptions" },
-           { label: "Status", key: "status" },
-           { label: "Actions", key: "actions" },
-         ]}
-         data={pagedDataWithOsIcon}
-      />
+        <Table
+          columns={[
+            { label: "Asset", key: "asset" },
+            { label: "OS", key: "os" },
+            { label: "Environment", key: "environment" },
+            { label: "Connector", key: "connector" },
+            { label: "Last Scanned", key: "lastScanned" },
+            { label: "Compliance", key: "compliance" },
+            { label: "Exceptions", key: "exceptions" },
+            { label: "Status", key: "status" },
+            { label: "Actions", key: "actions" },
+          ]}
+          data={pagedDataWithOsIcon}
+        />
       </div>
 
       <div className="mt-4 flex items-center justify-between">
