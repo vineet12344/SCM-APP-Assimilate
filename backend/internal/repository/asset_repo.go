@@ -9,8 +9,10 @@ type AssetRepository interface {
 	Create(asset *models.Asset) error
 	GetByID(id uint) (*models.Asset, error)
 	GetAll() ([]models.Asset, error)
-	Update(asset *models.Asset) error
+    // Updated Signatures
+	Update(id uint, asset *models.Asset) (*models.Asset, error)
 	Delete(id uint) error
+	BulkCreate(assets []models.Asset) error
 }
 
 type assetRepository struct {
@@ -37,10 +39,35 @@ func (r *assetRepository) GetAll() ([]models.Asset, error) {
 	return assets, err
 }
 
-func (r *assetRepository) Update(asset *models.Asset) error {
-	return r.db.Save(asset).Error
+// Update modifies an existing asset
+func (r *assetRepository) Update(id uint, asset *models.Asset) (*models.Asset, error) {
+	var existing models.Asset
+	// 1. Find existing
+	if err := r.db.First(&existing, id).Error; err != nil {
+		return nil, err
+	}
+	// 2. Update fields
+	if err := r.db.Model(&existing).Updates(asset).Error; err != nil {
+		return nil, err
+	}
+	return &existing, nil
 }
 
+// Delete performs a soft delete (because model has DeletedAt)
 func (r *assetRepository) Delete(id uint) error {
 	return r.db.Delete(&models.Asset{}, id).Error
+}
+
+
+func (r *assetRepository) BulkCreate(assets []models.Asset) error {
+	tx := r.db.Begin()
+	if err := tx.Error; err != nil {
+		return err
+	}
+	
+	if err := tx.CreateInBatches(&assets, 100).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+	return tx.Commit().Error
 }

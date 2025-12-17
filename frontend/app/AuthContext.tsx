@@ -28,7 +28,7 @@ export const useAuth = () => {
 };
 
 const loginApi = async (email: string, password: string): Promise<User> => {
-    const res = await fetch(`api/login`, {
+    const res = await fetch(`/api/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -50,7 +50,7 @@ const loginApi = async (email: string, password: string): Promise<User> => {
 
 const fetchUserApi = async (userToken?: string): Promise<User | null> => {
     try {
-        const res = await fetch(`api/me`, {
+        const res = await fetch(`/api/me`, {
             headers: userToken ? { 'Authorization': `Bearer ${userToken}` } : {},
             credentials: 'include',
         });

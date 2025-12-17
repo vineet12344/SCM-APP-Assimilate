@@ -3,8 +3,9 @@ package main
 import (
 	"fmt"
 	"log"
-	"github.com/joho/godotenv"
+
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 	"github.com/patil-rushikesh/scm-backend/config"
 	"github.com/patil-rushikesh/scm-backend/internal/handlers"
 	"github.com/patil-rushikesh/scm-backend/internal/middleware"
@@ -12,9 +13,11 @@ import (
 	"github.com/patil-rushikesh/scm-backend/internal/routes"
 	"github.com/patil-rushikesh/scm-backend/internal/services"
 	"github.com/patil-rushikesh/scm-backend/shared/database"
+	
 )
 
 func main() {
+	// gin.SetMode(gin.ReleaseMode)
 	_ = godotenv.Load()
 	cfg, err := config.LoadConfig()
 	if err != nil {
