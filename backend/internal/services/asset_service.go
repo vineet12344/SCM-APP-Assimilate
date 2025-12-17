@@ -9,8 +9,10 @@ type AssetService interface {
 	CreateAsset(asset *models.Asset) error
 	GetAsset(id uint) (*models.Asset, error)
 	GetAllAssets() ([]models.Asset, error)
-	UpdateAsset(asset *models.Asset) error
+    // Updated Signatures
+	UpdateAsset(id uint, asset *models.Asset) (*models.Asset, error)
 	DeleteAsset(id uint) error
+	BulkCreateAssets(assets []models.Asset) error
 }
 
 type assetService struct {
@@ -33,10 +35,18 @@ func (s *assetService) GetAllAssets() ([]models.Asset, error) {
 	return s.repo.GetAll()
 }
 
-func (s *assetService) UpdateAsset(asset *models.Asset) error {
-	return s.repo.Update(asset)
+func (s *assetService) UpdateAsset(id uint, asset *models.Asset) (*models.Asset, error) {
+	// Calls the updated Repo Update method
+	return s.repo.Update(id, asset)
 }
 
 func (s *assetService) DeleteAsset(id uint) error {
 	return s.repo.Delete(id)
 }
+
+func (s *assetService) BulkCreateAssets(assets []models.Asset) error {
+	return s.repo.BulkCreate(assets)
+}
+
+
+
